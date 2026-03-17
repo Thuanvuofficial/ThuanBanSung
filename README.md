@@ -1,26 +1,81 @@
---[[
-    FULL AIMBOT + ESP MENU - SNIPER ARENA
-    - Sử dụng CoreGui thay vì PlayerGui (tránh bị game xóa)
-    - Thêm phím tắt RightCtrl để ẩn/hiện menu
-    - Kiểm tra lỗi và log ra console
-]]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")  -- Dùng CoreGui an toàn hơn
-local Camera = workspace.CurrentCamera
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+-- 1. Tạo Cửa Sổ Menu
+local Window = Rayfield:CreateWindow({
+   Name = "Blox Fruits Pro Menu",
+   LoadingTitle = "Đang tải Script...",
+   LoadingSubtitle = "by Gemini AI",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "GeminiConfig", 
+      FileName = "BloxFruits"
+   }
+})
 
--- Kiểm tra nếu đã có GUI cũ thì xóa
-local existingGui = CoreGui:FindFirstChild("SniperArenaMenu")
-if existingGui then existingGui:Destroy() end
+-- 2. Tạo Tab Auto Farm
+local MainTab = Window:CreateTab("Auto Farm", 4483362458) -- ID icon
 
--- ===== CẤU HÌNH =====
-local Settings = {
-    Aimbot = {
-        Enabled = false,
+-- 3. Biến điều khiển trạng thái
+_G.AutoFarm = false
+
+-- 4. Hàm xử lý Logic Auto Farm (Mẫu đơn giản)
+function StartAutoFarm()
+    task.spawn(function()
+        while _G.AutoFarm do
+            task.wait(0.1)
+            -- Tìm quái (Ví dụ tìm quái gần nhất)
+            pcall(function()
+                for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
+                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                        -- Bay đến quái vật (CFrame)
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                        
+                        -- Tự động Click đánh
+                        local VirtualUser = game:GetService("VirtualUser")
+                        VirtualUser:CaptureController()
+                        VirtualUser:ClickButton1(Vector2.new(0,0))
+                        
+                        if not _G.AutoFarm then break end
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+-- 5. Tạo Nút Bật/Tắt (Toggle) trong Menu
+local Toggle = MainTab:CreateToggle({
+   Name = "Bật Auto Farm",
+   CurrentValue = false,
+   Flag = "ToggleFarm", -- ID của nút này trong file lưu config
+   Callback = function(Value)
+      _G.AutoFarm = Value
+      if Value then
+          Rayfield:Notify({
+             Title = "Thông báo",
+             Content = "Đã Bật Auto Farm!",
+             Duration = 3,
+             Image = 4483362458,
+          })
+          StartAutoFarm()
+      else
+          Rayfield:Notify({
+             Title = "Thông báo",
+             Content = "Đã Tắt Auto Farm!",
+             Duration = 3,
+             Image = 4483362458,
+          })
+      end
+   end,
+})
+
+-- Thông báo khi load xong
+Rayfield:Notify({
+   Title = "Thành công",
+   Content = "Menu đã sẵn sàng!",
+   Duration = 5,
+   Image = 4483362458,
+})
         TargetPart = "Head",           -- "Head" hoặc "HumanoidRootPart"
         MaxDistance = 500,
         FOV = 180,
